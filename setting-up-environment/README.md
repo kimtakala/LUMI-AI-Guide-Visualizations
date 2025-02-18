@@ -58,11 +58,22 @@ srun singularity exec $SIF \
 ```
 For more information on SLURM on LUMI, please visit the [SLURM quickstart page in our documentation](https://docs.lumi-supercomputer.eu/runjobs/scheduled-jobs/slurm-quickstart/).
 
+## `singularity-AI-bindings` module
+
+To give LUMI containers access to the Slingshot network for good RCCL and MPI performance and access to the file system of the working directory, some additional bindings are required. As it can be quite cumbersome to set these bindings manually, we provide a module that does this for you. You can load the module with the following commands:
+```
+module use /appl/local/containers/ai-modules
+module load singularity-AI-bindings
+```
+If you prefer to set the bindings manually, we recommend taking a look at the [Running containers on LUMI](https://lumi-supercomputer.github.io/LUMI-training-materials/ai-20240529/extra_05_RunningContainers/) lecture from the [LUMI AI workshop material](https://github.com/Lumi-supercomputer/Getting_Started_with_AI_workshop).
+
 ## Installing additional Python packages in a container 
 
 You might find yourself in a situation where none of the provided containers contain all Python packages you need. One possible way of adding custom packages not included in the image is to use a virtual environment on top of the conda environment. For this example, we need to add the HDF5 Python package `h5py` to the environment:
 
 ```
+module use /appl/local/containers/ai-modules
+module load singularity-AI-bindings
 export SIF=/appl/local/containers/sif-images/lumi-pytorch-rocm-6.2.1-python-3.12-pytorch-20240918-vllm-4075b35.sif
 singularity shell $SIF
 Singularity> $WITH_CONDA
@@ -83,16 +94,7 @@ This approach allows extending environment without rebuilding the container from
 
 In theory, you can also bring your own container images or convert images from other registries (DockerHub for instance) to the singularity format. In this case it remains your responsibility to keep the container compatible with LUMI's hardware and system environment. We strongly recommend building your containers on top of the  LUMI base images provided. 
 
-## `singularity-AI-bindings` module
-
-To give LUMI containers access to the Slingshot network for good RCCL and MPI performance and access to the file system of the working directory, some additional bindings are required. As it can be quite cumbersome to set these bindings manually, we provide a module that does this for you. You can load the module with the following commands:
-```
-module use /appl/local/containers/ai-modules
-module load singularity-AI-bindings
-```
-If you prefer to set the bindings manually, we recommend taking a look at the [Running containers on LUMI](https://lumi-supercomputer.github.io/LUMI-training-materials/ai-20240529/extra_05_RunningContainers/) lecture from the [LUMI AI workshop material](https://github.com/Lumi-supercomputer/Getting_Started_with_AI_workshop).
- 
- ### Table of contents
+### Table of contents
 
 - [Home](../README.md)
 - [QuickStart](../quickstart/README.md)
