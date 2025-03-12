@@ -1,4 +1,4 @@
-# QuickStart
+# 1. QuickStart
 
 This chapter covers how to set up the environment to run the [`visualtransformer.py`](visualtransformer.py) script on LUMI. 
 
@@ -62,7 +62,7 @@ Congratulations! You have run your first training job on LUMI. The next chapter 
  ### Table of contents
 
 - [Home](..#readme)
-- [QuickStart](../quickstart#readme)
+- [QuickStart](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/1-quickstart#readme)
 - [Setting up your own environment](../setting-up-environment#readme)
 - [File formats for training data](../file-formats#readme) 
 - [Data Storage Options](../data-storage#readme)
