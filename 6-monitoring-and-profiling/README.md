@@ -1,13 +1,13 @@
-# Monitoring and Profiling jobs
+# 6. Monitoring and Profiling jobs
 
 > [!NOTE]  
-> If you wish to run the included examples on LUMI, have a look at the [quickstart](../quickstart/README.md) chapter for instructions on how to set up the required environment.
+> If you wish to run the included examples on LUMI, have a look at the [quickstart](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/1-quickstart#readme) chapter for instructions on how to set up the required environment.
 
 When running jobs on LUMI's GPUs, you want to make sure you use the given computational resources as efficiently as possible. Your project will be billed for the number of GPUs you allocate times the number of hours you use them. If you only utilize half of the GPUs computational power, you are still billed for the full GPU, resulting in wasted resources and money. In this chapter, we will show how to monitor and profile your jobs to ensure you are using the resources efficiently.
 
 ## Monitoring jobs with `rocm-smi`
 
-The `rocm-smi` tool is a command-line utility that allows you to monitor the status of the GPUs on LUMI. Let's start with the [visualtransformer.py](../quickstart/visualtransformer.py) script from the [QuickStart](../quickstart/README.md) chapter that runs on a single GPU. We submit the job with the following command:
+The `rocm-smi` tool is a command-line utility that allows you to monitor the status of the GPUs on LUMI. Let's start with the [visualtransformer.py](../1-quickstart/visualtransformer.py) script from the [QuickStart](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/1-quickstart#readme) chapter that runs on a single GPU. We submit the job with the following command:
 
 ```bash
 sbatch run.sh
@@ -30,7 +30,7 @@ The output will look similar to the following:
 
 The `rocm-smi` tool shows multiple useful metrics such as GPU utilization, memory usage, temperature, and power usage. The most intuitive metrics might be GPU utilization and memory usage, they are however not accurate indicators whether the GPU is fully utilized as a kernel waiting idle for data shows in the driver as 100% GPU utilization. The best indicator is instead the drawn power. For a single GPU, a power usage of around 300W is a good indicator that the full GPU is being leveraged. 
 
-Let's have a look at the [ddp_visualtransformer.py](../multi-gpu-and-node/ddp_visualtransformer.py) example from the [Multi-GPU and Multi-Node Training](../multi-gpu-and-node/README.md) chapter that runs on 8 GPUs on one node. We submit the job with the following command:
+Let's have a look at the [ddp_visualtransformer.py](../5-multi-gpu-and-node/ddp_visualtransformer.py) example from the [Multi-GPU and Multi-Node Training](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/5-multi-gpu-and-node#readme) chapter that runs on 8 GPUs on one node. We submit the job with the following command:
 
 ```bash
 sbatch run_ddp_torchrun.sh

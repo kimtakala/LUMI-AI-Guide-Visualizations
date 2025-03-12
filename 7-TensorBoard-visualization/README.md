@@ -1,7 +1,7 @@
-# TensorBoard visualization
+# 7. TensorBoard visualization
 
 > [!NOTE]  
-> If you wish to run the included examples on LUMI, have a look at the [quickstart](../quickstart/README.md) chapter for instructions on how to set up the required environment.
+> If you wish to run the included examples on LUMI, have a look at the [quickstart](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/1-quickstart#readme) chapter for instructions on how to set up the required environment.
 
 [TensorBoard](https://www.tensorflow.org/tensorboard) is a tool for providing the measurements and visualizations needed during the machine learning workflow. It enables tracking experiment metrics like loss and accuracy, visualizing the model graph, projecting embeddings to a lower dimensional space, and much more.
 
@@ -64,7 +64,7 @@ In TensorBoard, the collected data will be visualized similar to the following:
 
 ![Image title](../assets/images/loss.png)
 
-For a full example that integrates TensorBoard to the DDP script, have a look at [tensorboard_ddp_visualtransformer.py](tensorboard_ddp_visualtransformer.py). For the batch script there are no changes required except for replacing [ddp_visualtransformer.py](../multi-gpu-and-node/ddp_visualtransformer.py) with [tensorboard_ddp_visualtransformer.py](tensorboard_ddp_visualtransformer.py).
+For a full example that integrates TensorBoard to the DDP script, have a look at [tensorboard_ddp_visualtransformer.py](tensorboard_ddp_visualtransformer.py). For the batch script there are no changes required except for replacing [ddp_visualtransformer.py](../5-multi-gpu-and-node/ddp_visualtransformer.py) with [tensorboard_ddp_visualtransformer.py](tensorboard_ddp_visualtransformer.py).
 
 ## Visualizing the logs
 

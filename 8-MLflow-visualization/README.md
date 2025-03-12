@@ -1,7 +1,7 @@
-# MLflow visualization
+# 8. MLflow visualization
 
 > [!NOTE]  
-> If you wish to run the included examples on LUMI, have a look at the [quickstart](../quickstart/README.md) chapter for instructions on how to set up the required environment.
+> If you wish to run the included examples on LUMI, have a look at the [quickstart](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/1-quickstart#readme) chapter for instructions on how to set up the required environment.
 
 [MLflow](https://www.mlflow.org/) is an open source tool for tracking experiments and models in machine learning projects. MLflow can be easily installed with `pip install mlflow`. Adapting your code to use MLflow requires minimal modification, and the results can be easily displayed using the web interface.
 
