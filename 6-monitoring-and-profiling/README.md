@@ -1,13 +1,13 @@
-# Monitoring and Profiling jobs
+# 6. Monitoring and Profiling jobs
 
 > [!NOTE]  
-> If you wish to run the included examples on LUMI, have a look at the [quickstart](../quickstart/README.md) chapter for instructions on how to set up the required environment.
+> If you wish to run the included examples on LUMI, have a look at the [quickstart](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/1-quickstart#readme) chapter for instructions on how to set up the required environment.
 
 When running jobs on LUMI's GPUs, you want to make sure you use the given computational resources as efficiently as possible. Your project will be billed for the number of GPUs you allocate times the number of hours you use them. If you only utilize half of the GPUs computational power, you are still billed for the full GPU, resulting in wasted resources and money. In this chapter, we will show how to monitor and profile your jobs to ensure you are using the resources efficiently.
 
 ## Monitoring jobs with `rocm-smi`
 
-The `rocm-smi` tool is a command-line utility that allows you to monitor the status of the GPUs on LUMI. Let's start with the [visualtransformer.py](../quickstart/visualtransformer.py) script from the [QuickStart](../quickstart/README.md) chapter that runs on a single GPU. We submit the job with the following command:
+The `rocm-smi` tool is a command-line utility that allows you to monitor the status of the GPUs on LUMI. Let's start with the [visualtransformer.py](../1-quickstart/visualtransformer.py) script from the [QuickStart](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/1-quickstart#readme) chapter that runs on a single GPU. We submit the job with the following command:
 
 ```bash
 sbatch run.sh
@@ -30,7 +30,7 @@ The output will look similar to the following:
 
 The `rocm-smi` tool shows multiple useful metrics such as GPU utilization, memory usage, temperature, and power usage. The most intuitive metrics might be GPU utilization and memory usage, they are however not accurate indicators whether the GPU is fully utilized as a kernel waiting idle for data shows in the driver as 100% GPU utilization. The best indicator is instead the drawn power. For a single GPU, a power usage of around 300W is a good indicator that the full GPU is being leveraged. 
 
-Let's have a look at the [ddp_visualtransformer.py](../multi-gpu-and-node/ddp_visualtransformer.py) example from the [Multi-GPU and Multi-Node Training](../multi-gpu-and-node/README.md) chapter that runs on 8 GPUs on one node. We submit the job with the following command:
+Let's have a look at the [ddp_visualtransformer.py](../5-multi-gpu-and-node/ddp_visualtransformer.py) example from the [Multi-GPU and Multi-Node Training](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/5-multi-gpu-and-node#readme) chapter that runs on 8 GPUs on one node. We submit the job with the following command:
 
 ```bash
 sbatch run_ddp_torchrun.sh
@@ -71,15 +71,15 @@ Note that chrome tabs are usually limited to around 2 GB of memory usage and tha
 
 If the framework-level profiling is not sufficient and you want to investigate hardware-level performance, you can use AMD's profiling tools. The [LUMI training materials](https://lumi-supercomputer.github.io/LUMI-training-materials/) provide multiple lectures on how to use AMD's profilers `rocprof`, `Omnitrace` and `Omniperf`. For a short introduction to `rocprof`, have a look at the lecture ["Understanding GPU activity & checking jobs"](https://lumi-supercomputer.github.io/LUMI-training-materials/ai-20241126/extra_04_CheckingGPU/) from the LUMI AI workshop. If you need a detailed introduction to all AMD profilers provided on LUMI, we recommend the lecture material of the LUMI [Performance Analysis and Optimization Workshop](https://lumi-supercomputer.github.io/LUMI-training-materials/paow-20240611/).
 
- ### Table of contents
+### Table of contents
 
-- [Home](../README.md)
-- [QuickStart](../quickstart/README.md)
-- [Setting up your own environment](../setting-up-environment/README.md)
-- [File formats for training data](../file-formats/README.md) 
-- [Data Storage Options](../data-storage/README.md)
-- [Multi-GPU and Multi-Node Training](../multi-gpu-and-node/README.md)
-- [Monitoring and Profiling jobs](../monitoring-and-profiling/README.md)
-- [TensorBoard visualization](../TensorBoard-visualization/README.md)
-- [MLflow visualization](../MLflow-visualization/README.md)
-- [Wandb visualization](../Wandb-visualization/README.md)
+- [Home](..#readme)
+- [1 QuickStart](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/1-quickstart#readme)
+- [2 Setting up your own environment](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/2-setting-up-environment#readme)
+- [3 File formats for training data](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/3-file-formats#readme)
+- [4 Data Storage Options](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/4-data-storage#readme)
+- [5 Multi-GPU and Multi-Node Training](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/5-multi-gpu-and-node#readme)
+- [6 Monitoring and Profiling jobs](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/6-monitoring-and-profiling#readme)
+- [7 TensorBoard visualization](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/7-TensorBoard-visualization#readme)
+- [8 MLflow visualization](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/8-MLflow-visualization#readme)
+- [9 Wandb visualization](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/9-Wandb-visualization#readme)

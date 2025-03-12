@@ -1,7 +1,7 @@
-# TensorBoard visualization
+# 7. TensorBoard visualization
 
 > [!NOTE]  
-> If you wish to run the included examples on LUMI, have a look at the [quickstart](../quickstart/README.md) chapter for instructions on how to set up the required environment.
+> If you wish to run the included examples on LUMI, have a look at the [quickstart](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/1-quickstart#readme) chapter for instructions on how to set up the required environment.
 
 [TensorBoard](https://www.tensorflow.org/tensorboard) is a tool for providing the measurements and visualizations needed during the machine learning workflow. It enables tracking experiment metrics like loss and accuracy, visualizing the model graph, projecting embeddings to a lower dimensional space, and much more.
 
@@ -64,7 +64,7 @@ In TensorBoard, the collected data will be visualized similar to the following:
 
 ![Image title](../assets/images/loss.png)
 
-For a full example that integrates TensorBoard to the DDP script, have a look at [tensorboard_ddp_visualtransformer.py](tensorboard_ddp_visualtransformer.py). For the batch script there are no changes required except for replacing [ddp_visualtransformer.py](../multi-gpu-and-node/ddp_visualtransformer.py) with [tensorboard_ddp_visualtransformer.py](tensorboard_ddp_visualtransformer.py).
+For a full example that integrates TensorBoard to the DDP script, have a look at [tensorboard_ddp_visualtransformer.py](tensorboard_ddp_visualtransformer.py). For the batch script there are no changes required except for replacing [ddp_visualtransformer.py](../5-multi-gpu-and-node/ddp_visualtransformer.py) with [tensorboard_ddp_visualtransformer.py](tensorboard_ddp_visualtransformer.py).
 
 ## Visualizing the logs
 
@@ -77,16 +77,15 @@ To launch it, select the log directory where you have data to visualize, which i
 
 Note that TensorBoard is very memory intensive but has low CPU usage. Thus, in the case of performance problems, adding more memory during allocation can help.
 
- ### Table of contents
+### Table of contents
 
-- [Home](../README.md)
-- [QuickStart](../quickstart/README.md)
-- [Setting up your own environment](../setting-up-environment/README.md)
-- [File formats for training data](../file-formats/README.md) 
-- [Data Storage Options](../data-storage/README.md)
-- [Multi-GPU and Multi-Node Training](../multi-gpu-and-node/README.md)
-- [Monitoring and Profiling jobs](../monitoring-and-profiling/README.md)
-- [TensorBoard visualization](../TensorBoard-visualization/README.md)
-- [MLflow visualization](../MLflow-visualization/README.md)
-- [Wandb visualization](../Wandb-visualization/README.md)
-
+- [Home](..#readme)
+- [1 QuickStart](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/1-quickstart#readme)
+- [2 Setting up your own environment](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/2-setting-up-environment#readme)
+- [3 File formats for training data](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/3-file-formats#readme)
+- [4 Data Storage Options](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/4-data-storage#readme)
+- [5 Multi-GPU and Multi-Node Training](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/5-multi-gpu-and-node#readme)
+- [6 Monitoring and Profiling jobs](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/6-monitoring-and-profiling#readme)
+- [7 TensorBoard visualization](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/7-TensorBoard-visualization#readme)
+- [8 MLflow visualization](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/8-MLflow-visualization#readme)
+- [9 Wandb visualization](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/9-Wandb-visualization#readme)

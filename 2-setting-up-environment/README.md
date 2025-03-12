@@ -1,4 +1,4 @@
-# Setting up your own environment
+# 2. Setting up your own environment
 
 Machine learning frameworks on LUMI serve as isolated environments in the form of container images with a set of Python packages. LUMI uses the [Singularity](https://docs.sylabs.io/guides/main/user-guide/) (SingularityCE) container runtime. Containers can be seen as encapsulated images of a specific environment including all required libraries, tools and Python packages. Container images can be based on virtually any Linux distribution targeting the host architecture, but it still relies on the host kernel and kernel drivers. This plays a significant role in the case of LUMI.
 
@@ -96,13 +96,13 @@ In theory, you can also bring your own container images or convert images from o
 
 ### Table of contents
 
-- [Home](../README.md)
-- [QuickStart](../quickstart/README.md)
-- [Setting up your own environment](../setting-up-environment/README.md)
-- [File formats for training data](../file-formats/README.md) 
-- [Data Storage Options](../data-storage/README.md)
-- [Multi-GPU and Multi-Node Training](../multi-gpu-and-node/README.md)
-- [Monitoring and Profiling jobs](../monitoring-and-profiling/README.md)
-- [TensorBoard visualization](../TensorBoard-visualization/README.md)
-- [MLflow visualization](../MLflow-visualization/README.md)
-- [Wandb visualization](../Wandb-visualization/README.md)
+- [Home](..#readme)
+- [1 QuickStart](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/1-quickstart#readme)
+- [2 Setting up your own environment](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/2-setting-up-environment#readme)
+- [3 File formats for training data](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/3-file-formats#readme)
+- [4 Data Storage Options](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/4-data-storage#readme)
+- [5 Multi-GPU and Multi-Node Training](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/5-multi-gpu-and-node#readme)
+- [6 Monitoring and Profiling jobs](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/6-monitoring-and-profiling#readme)
+- [7 TensorBoard visualization](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/7-TensorBoard-visualization#readme)
+- [8 MLflow visualization](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/8-MLflow-visualization#readme)
+- [9 Wandb visualization](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/9-Wandb-visualization#readme)

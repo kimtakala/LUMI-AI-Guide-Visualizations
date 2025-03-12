@@ -1,7 +1,7 @@
-# File formats for training data
+# 3. File formats for training data
 
 > [!NOTE]  
-> The Python and shell scripts in the `file-formats` directory are used for the benchmarks presented in this chapter. Many of them require packages that are not included in the environment that is set up in the [QuickStart](../quickstart/README.md) chapter. If you wish to install additional packages and run these scripts yourself, have a look at the [Setting up your own environment](../setting-up-environment/README.md) chapter.
+> The Python and shell scripts in the `file-formats` directory are used for the benchmarks presented in this chapter. Many of them require packages that are not included in the environment that is set up in the [QuickStart](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/1-quickstart#readme)) chapter. If you wish to install additional packages and run these scripts yourself, have a look at the [Setting up your own environment](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/2-setting-up-environment#readme) chapter.
 
 ## Introduction
 
@@ -24,7 +24,7 @@ mksquashfs ILSVRC/ imagenet.squashfs
 Then the `.squashfs` file is ready to be transferred to LUMI. This can be done in a variety of ways as seen in the [LUMI documentation](https://docs.lumi-supercomputer.eu/firststeps/movingdata/), where for this purpose `rsync` is particularly useful with the flags `--partial` and `--progress --stats` to keep partial transfers and display detailed transfer progress stats of the large single file. 
 
 ### Running PyTorch
-Running PyTorch with data stored in the `squashfs` file format is particularly simple because we are already utilizing containers which were introduced in chapter [Setting up your own environment](../setting-up-environment/README.md). The singularity container supports [mounting](https://docs.sylabs.io/guides/3.7/user-guide/bind_paths_and_mounts.html#squashfs-image-files) the `squashfs` file directly into the file system when running the container,
+Running PyTorch with data stored in the `squashfs` file format is particularly simple because we are already utilizing containers which were introduced in chapter [Setting up your own environment](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/2-setting-up-environment#readme). The singularity container supports [mounting](https://docs.sylabs.io/guides/3.7/user-guide/bind_paths_and_mounts.html#squashfs-image-files) the `squashfs` file directly into the file system when running the container,
 ```bash
 singularity run -B inputs.squashfs:/input-data:image-src=/ mycontainer.sif
 ```
@@ -89,15 +89,15 @@ For the large imagenet, we loop through 200.000 out of the 1.2 million images fo
 
 We see a speed-up of roughly 28% for LMDB compared to squashfs. 
 
- ### Table of contents
+### Table of contents
 
-- [Home](../README.md)
-- [QuickStart](../quickstart/README.md)
-- [Setting up your own environment](../setting-up-environment/README.md)
-- [File formats for training data](../file-formats/README.md) 
-- [Data Storage Options](../data-storage/README.md)
-- [Multi-GPU and Multi-Node Training](../multi-gpu-and-node/README.md)
-- [Monitoring and Profiling jobs](../monitoring-and-profiling/README.md)
-- [TensorBoard visualization](../TensorBoard-visualization/README.md)
-- [MLflow visualization](../MLflow-visualization/README.md)
-- [Wandb visualization](../Wandb-visualization/README.md)
+- [Home](..#readme)
+- [1 QuickStart](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/1-quickstart#readme)
+- [2 Setting up your own environment](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/2-setting-up-environment#readme)
+- [3 File formats for training data](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/3-file-formats#readme)
+- [4 Data Storage Options](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/4-data-storage#readme)
+- [5 Multi-GPU and Multi-Node Training](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/5-multi-gpu-and-node#readme)
+- [6 Monitoring and Profiling jobs](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/6-monitoring-and-profiling#readme)
+- [7 TensorBoard visualization](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/7-TensorBoard-visualization#readme)
+- [8 MLflow visualization](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/8-MLflow-visualization#readme)
+- [9 Wandb visualization](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/9-Wandb-visualization#readme)

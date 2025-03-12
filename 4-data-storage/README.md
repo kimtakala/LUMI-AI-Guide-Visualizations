@@ -1,7 +1,7 @@
-# Data Storage Options
+# 4. Data Storage Options
 
 > [!NOTE]  
-> If you wish to run the included examples on LUMI, have a look at the [quickstart](../quickstart/README.md) chapter for instructions on how to set up the required environment.
+> If you wish to run the included examples on LUMI, have a look at the [quickstart](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/1-quickstart#readme) chapter for instructions on how to set up the required environment.
 
 This section describes the most useful data storage options for AI users on LUMI.
 
@@ -60,15 +60,15 @@ An example of using RAMfs for the visualtransformer script can be found in [run_
  - [LUG2019-Lustre_Overstriping_Shared_Write_Performance-Farrell.pdf](https://wiki.lustre.org/images/b/b3/LUG2019-Lustre_Overstriping_Shared_Write_Performance-Farrell.pdf)
  - [Configuring Lustre File Striping](https://wiki.lustre.org/index.php/Configuring_Lustre_File_Striping)
 
- ### Table of contents
+### Table of contents
 
-- [Home](../README.md)
-- [QuickStart](../quickstart/README.md)
-- [Setting up your own environment](../setting-up-environment/README.md)
-- [File formats for training data](../file-formats/README.md) 
-- [Data Storage Options](../data-storage/README.md)
-- [Multi-GPU and Multi-Node Training](../multi-gpu-and-node/README.md)
-- [Monitoring and Profiling jobs](../monitoring-and-profiling/README.md)
-- [TensorBoard visualization](../TensorBoard-visualization/README.md)
-- [MLflow visualization](../MLflow-visualization/README.md)
-- [Wandb visualization](../Wandb-visualization/README.md)
+- [Home](..#readme)
+- [1 QuickStart](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/1-quickstart#readme)
+- [2 Setting up your own environment](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/2-setting-up-environment#readme)
+- [3 File formats for training data](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/3-file-formats#readme)
+- [4 Data Storage Options](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/4-data-storage#readme)
+- [5 Multi-GPU and Multi-Node Training](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/5-multi-gpu-and-node#readme)
+- [6 Monitoring and Profiling jobs](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/6-monitoring-and-profiling#readme)
+- [7 TensorBoard visualization](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/7-TensorBoard-visualization#readme)
+- [8 MLflow visualization](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/8-MLflow-visualization#readme)
+- [9 Wandb visualization](https://github.com/Lumi-supercomputer/LUMI-AI-Guide/tree/main/9-Wandb-visualization#readme)
