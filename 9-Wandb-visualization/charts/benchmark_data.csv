@@ -1,0 +1,6 @@
+run_name,runtime_seconds,extrapolated_total_time_hr,nodes,device_type,accuracy,state,created,training_time_hours,is_laptop,is_extrapolated,clean_name
+Single Node Run,960.0,,1,,42.56,finished,2025-07-09T11:13:07.000Z,0.26666666666666666,False,False,LUMI 1-Node
+Four Node Run,303.0,,4,,39.36,finished,2025-07-10T13:32:40.000Z,0.08416666666666667,False,False,LUMI 4-Node
+Eight Node Run 2.0,196.0,,8,,53.35463258785943,finished,2025-07-10T14:48:20.000Z,0.05444444444444444,False,False,LUMI 8-Node
+Laptop-Multicore-2.0pct-8cores,4753.0,54.0944515367349,8,CPU,,finished,2025-07-14T13:23:58.000Z,54.0944515367349,True,True,Laptop (Multicore)
+Laptop-Benchmark-1.0pct-subset,2908.0,75.83101797103882,1,CPU,,finished,2025-07-14T12:34:44.000Z,75.83101797103882,True,True,Laptop (Single)

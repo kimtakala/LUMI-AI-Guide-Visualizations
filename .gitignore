@@ -171,3 +171,9 @@ timings/
 visualtransformer-env
 *out
 *~
+
+.vscode/
+logs/
+*.sif
+resources/
+.local/

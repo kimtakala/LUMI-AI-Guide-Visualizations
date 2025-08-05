@@ -1,0 +1,27 @@
+{
+  "os":  "Linux-5.14.0-570.25.1.el9_6.x86_64-x86_64-with-glibc2.31",
+  "python":  "CPython 3.12.4",
+  "startedAt":  "2025-07-14T13:23:57.719894Z",
+  "program":  "/home/takalaki/Projects/LUMI-AI-Guide-COPY/9-Wandb-visualization/.local/wandb_laptop_multicore_benchmark.py",
+  "codePath":  "9-Wandb-visualization/.local/wandb_laptop_multicore_benchmark.py",
+  "codePathLocal":  "9-Wandb-visualization/.local/wandb_laptop_multicore_benchmark.py",
+  "git":  {
+    "commit":  "1254073679aa71813a99167bba8874a89058bae0"
+  },
+  "email":  "kim.takala@hotmail.com",
+  "root":  "/home/takalaki/Projects/LUMI-AI-Guide-COPY",
+  "host":  "ampuhaukka.lnx.csc.fi",
+  "executable":  "/opt/miniconda3/envs/pytorch/bin/python3",
+  "cpu_count":  4,
+  "cpu_count_logical":  8,
+  "disk":  {
+    "/":  {
+      "total":  "67108864",
+      "used":  "16384"
+    }
+  },
+  "memory":  {
+    "total":  "16211910656"
+  },
+  "writerId":  "dwzf4bpse1hpjr4l4kbiglukezupeyzu"
+}

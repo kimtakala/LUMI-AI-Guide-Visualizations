@@ -87,6 +87,59 @@ Finally, the `Logs` tab will show the output of the run after the initialization
 
 ![Wandb Logs](../assets/images/wandb_logs.png)
 
+## Fair Laptop vs LUMI Benchmarking
+
+A key challenge in demonstrating LUMI's performance advantage is creating fair comparisons between laptop and distributed training. This section provides a scientifically rigorous benchmarking methodology.
+
+### The Challenge
+- Laptops can't process the full 4.6GB dataset in reasonable time
+- Different datasets/models make comparisons meaningless  
+- We need objective performance measurements, not just different workloads
+
+### The Solution: Subset + Extrapolation
+
+The `.local/` folder contains scripts for fair benchmarking that:
+
+1. **Use Identical Setup**: Same HDF5 dataset, ViT-B-16 model, hyperparameters, and container as LUMI
+2. **Process Subset**: Handle a small percentage (1%) of the full dataset for timing
+3. **Extrapolate Accurately**: Calculate total time needed for the full dataset based on measured per-sample timing
+4. **Log Comprehensively**: Track both actual subset metrics and extrapolated full-dataset metrics
+
+### Quick Start
+
+```bash
+# Set up Wandb authentication
+export WANDB_API_KEY=your_key_here
+
+# Test the setup
+cd .local/
+./test-benchmark-setup.sh
+
+# Run the fair benchmark  
+./run-laptop-benchmark.sh
+```
+
+### Available Scripts
+
+| Script | Purpose | Dataset | Runtime |
+|--------|---------|---------|---------|
+| `run-laptop-benchmark.sh` | **Fair benchmark** - same dataset/model as LUMI | HDF5 (1% subset) | ~5-10 min |
+| `run-laptop-multicore-benchmark.sh` | **Multicore fair benchmark** - optimized for all CPU cores | HDF5 (2% subset) | ~8-15 min |
+| `run-laptop.sh` | Basic single-threaded CPU training | CIFAR-10 | ~30 min |
+
+### Interpreting Results
+
+The benchmark logs to Wandb project `LUMI-Laptop-Benchmark` with metrics like:
+- `extrapolated_total_time_hr`: Total training time for full dataset
+- `final_speedup_needed_for_1hr`: Speedup factor vs laptop
+- System information for context
+
+**Example**: If laptop extrapolates to 48 hours and LUMI completes in 2 hours, that's a **24x speedup** - a scientifically valid comparison.
+
+### Documentation
+
+See `.local/README-BENCHMARKING.md` for detailed methodology and best practices.
+
 ### Table of contents
 
 - [Home](..#readme)
