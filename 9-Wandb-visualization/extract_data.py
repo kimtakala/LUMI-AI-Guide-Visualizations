@@ -53,12 +53,42 @@ class WandbDataExtractor:
                 pass
         if nodes is None:
             nodes = self._extract_nodes_from_name(name)
+
+        # Extract GPU count from CSV or run name
+        total_gpus = None
+        gpu_val = row.get("total_gpus", "")
+        if pd.notna(gpu_val) and str(gpu_val) != "" and str(gpu_val) != "nan":
+            try:
+                total_gpus = int(float(gpu_val))
+            except:
+                pass
+
+        # If no total_gpus column, try to extract from gpus column or name
+        if total_gpus is None:
+            gpus_val = row.get("gpus", "")
+            if pd.notna(gpus_val) and str(gpus_val) != "" and str(gpus_val) != "nan":
+                try:
+                    total_gpus = int(float(gpus_val))
+                except:
+                    pass
+
+        if total_gpus is None:
+            total_gpus = self._extract_gpus_from_name(name)
+
+        # Enhanced device type detection for new CSV format
         device_type = str(row.get("device_type", "")).upper()
-        if pd.isna(device_type) or device_type == "NAN":
+        if pd.isna(device_type) or device_type == "NAN" or device_type == "":
             if "Laptop" in name:
                 device_type = "CPU"
             else:
-                device_type = "GPU"
+                # Try to infer from other columns in new CSV format
+                hardware = str(row.get("hardware", ""))
+                device = str(row.get("device", ""))
+                if "cpu" in hardware.lower() or "cpu" in device.lower():
+                    device_type = "CPU"
+                else:
+                    device_type = "GPU"
+
         extrapolated_time = None
         extrap_val = row.get("extrapolated_total_time_hr", "")
         if pd.notna(extrap_val) and str(extrap_val) != "":
@@ -66,18 +96,24 @@ class WandbDataExtractor:
                 extrapolated_time = float(extrap_val)
             except:
                 pass
+
+        # Enhanced accuracy detection for new CSV format
         accuracy = None
-        acc_val = row.get("acc", "")
-        if pd.notna(acc_val) and str(acc_val) != "":
-            try:
-                accuracy = float(acc_val)
-            except:
-                pass
+        # Try multiple accuracy column names
+        for acc_col in ["acc", "val_accuracy", "train_accuracy"]:
+            acc_val = row.get(acc_col, "")
+            if pd.notna(acc_val) and str(acc_val) != "" and str(acc_val) != "nan":
+                try:
+                    accuracy = float(acc_val)
+                    break  # Use the first valid accuracy found
+                except:
+                    continue
         run_data = {
             "run_name": name,
             "runtime_seconds": runtime_seconds,
             "extrapolated_total_time_hr": extrapolated_time,
             "nodes": nodes,
+            "total_gpus": total_gpus,
             "device_type": device_type,
             "accuracy": accuracy,
             "state": str(row.get("State", "Unknown")),
@@ -102,34 +138,117 @@ class WandbDataExtractor:
         final_df = pd.concat([selected_lumi, selected_laptop], ignore_index=True)
         return final_df
 
+    def save_to_benchmark_csv(self, df, output_path="charts/benchmark_data.csv"):
+        """Save the processed dataframe to benchmark_data.csv format"""
+        if df.empty:
+            print("No data to save")
+            return
+
+        # Create output directory if it doesn't exist
+        output_file = Path(output_path)
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+
+        # Ensure we have all required columns for benchmark_data.csv
+        required_columns = [
+            "run_name",
+            "runtime_seconds",
+            "extrapolated_total_time_hr",
+            "nodes",
+            "total_gpus",
+            "device_type",
+            "accuracy",
+            "state",
+            "created",
+            "training_time_hours",
+            "is_laptop",
+            "is_extrapolated",
+            "clean_name",
+        ]
+
+        # Add any missing columns with default values
+        for col in required_columns:
+            if col not in df.columns:
+                df[col] = None
+
+        # Reorder columns to match benchmark_data.csv format
+        df_ordered = df[required_columns]
+
+        # Load existing data if file exists
+        if output_file.exists():
+            existing_df = pd.read_csv(output_file)
+            print(f"Found existing benchmark data with {len(existing_df)} rows")
+
+            # Remove duplicates based on run_name
+            existing_names = set(existing_df["run_name"].tolist())
+            new_data = df_ordered[~df_ordered["run_name"].isin(existing_names)]
+
+            if len(new_data) > 0:
+                # Combine and save
+                combined_df = pd.concat([existing_df, new_data], ignore_index=True)
+                combined_df.to_csv(output_file, index=False)
+                print(f"Added {len(new_data)} new rows. Total: {len(combined_df)} rows")
+            else:
+                print("No new data to add (all runs already exist)")
+        else:
+            # Save new file
+            df_ordered.to_csv(output_file, index=False)
+            print(f"Created new benchmark_data.csv with {len(df_ordered)} rows")
+
+    def update_benchmark_from_csvs(self):
+        """Extract data from CSV files and update benchmark_data.csv"""
+        print("Extracting data from CSV files...")
+        self.extract_from_csv_files()
+
+        if not self.data:
+            print("No data extracted from CSV files")
+            return
+
+        print(f"Processing {len(self.data)} runs...")
+        df = self.create_dataframe()
+
+        if df.empty:
+            print("No valid data after processing")
+            return
+
+        print(f"Saving {len(df)} processed runs to benchmark_data.csv...")
+        self.save_to_benchmark_csv(df)
+        return df
+
     def _select_best_lumi_runs(self, lumi_df):
         if lumi_df.empty:
             return lumi_df
+
+        # Only include finished runs - no fallback to other states
         finished_runs = lumi_df[lumi_df["state"] == "finished"].copy()
         if finished_runs.empty:
-            finished_runs = lumi_df.copy()
+            print("No finished LUMI runs found")
+            return pd.DataFrame()
+
         selected_runs = []
-        target_nodes = [1, 2, 4, 8, 16]
-        for node_count in target_nodes:
-            node_runs = finished_runs[finished_runs["nodes"] == node_count]
-            if not node_runs.empty:
-                valid_runs = node_runs[node_runs["accuracy"].notna()]
+
+        # Group by total_gpus - include ALL unique GPU counts
+        gpu_counts = finished_runs["total_gpus"].dropna().unique()
+        gpu_counts = sorted([int(x) for x in gpu_counts if pd.notna(x)])
+
+        for gpu_count in gpu_counts:
+            gpu_runs = finished_runs[finished_runs["total_gpus"] == gpu_count]
+            if not gpu_runs.empty:
+                # Prefer runs with accuracy data
+                valid_runs = gpu_runs[gpu_runs["accuracy"].notna()]
                 if valid_runs.empty:
-                    valid_runs = node_runs
+                    valid_runs = gpu_runs
+
+                # Select best run based on shortest training time
                 best_run = valid_runs.loc[valid_runs["training_time_hours"].idxmin()]
                 selected_runs.append(best_run.to_dict())
-        preferred_nodes = [1, 4, 8]
-        final_runs = []
-        for nodes in preferred_nodes:
-            for run in selected_runs:
-                if run["nodes"] == nodes and len(final_runs) < 3:
-                    final_runs.append(run)
-                    break
-        for run in selected_runs:
-            if run not in final_runs and len(final_runs) < 3:
-                final_runs.append(run)
-        selected_runs = final_runs[:3]
-        return pd.DataFrame(selected_runs)
+
+        # Return all runs - no cap, no preferred filtering
+        # Just sort by GPU count for consistent ordering
+        final_df = pd.DataFrame(selected_runs)
+        if not final_df.empty:
+            final_df = final_df.sort_values("total_gpus")
+
+        return final_df
 
     def _deduplicate_runs(self, runs_df):
         if runs_df.empty:
@@ -185,181 +304,45 @@ class WandbDataExtractor:
         else:
             return None
 
+    def _extract_gpus_from_name(self, name):
+        """Extract GPU count from run name like '8 GPU 1 Node Run'"""
+        import re
 
-def create_manual_data():
-    manual_data = [
-        # 1 node configurations
-        {
-            "run_name": "1 Node 1 GPU Run",
-            "clean_name": "LUMI 1 GPU",
-            "training_time_hours": 2.0,  # Baseline
-            "runtime_seconds": 7200,
-            "is_laptop": False,
-            "is_extrapolated": False,
-            "nodes": 1,
-            "gpus": 1,
-            "device_type": "GPU",
-            "accuracy": 42.56,
-            "state": "finished",
-            "created": "",
-        },
-        {
-            "run_name": "1 Node 2 GPU Run",
-            "clean_name": "LUMI 2 GPUs",
-            "training_time_hours": 1.05,  # ~1.9x speedup
-            "runtime_seconds": 3780,
-            "is_laptop": False,
-            "is_extrapolated": False,
-            "nodes": 1,
-            "gpus": 2,
-            "device_type": "GPU",
-            "accuracy": 42.56,
-            "state": "finished",
-            "created": "",
-        },
-        {
-            "run_name": "1 Node 4 GPU Run",
-            "clean_name": "LUMI 4 GPUs",
-            "training_time_hours": 0.53,  # ~3.8x speedup
-            "runtime_seconds": 1908,
-            "is_laptop": False,
-            "is_extrapolated": False,
-            "nodes": 1,
-            "gpus": 4,
-            "device_type": "GPU",
-            "accuracy": 42.56,
-            "state": "finished",
-            "created": "",
-        },
-        {
-            "run_name": "1 Node 8 GPU Run",
-            "clean_name": "LUMI 8 GPUs",
-            "training_time_hours": 0.267,  # ~7.5x speedup
-            "runtime_seconds": 960,
-            "is_laptop": False,
-            "is_extrapolated": False,
-            "nodes": 1,
-            "gpus": 8,
-            "device_type": "GPU",
-            "accuracy": 42.56,
-            "state": "finished",
-            "created": "",
-        },
-        # 2 node configurations
-        {
-            "run_name": "2 Node 12 GPU Run",
-            "clean_name": "LUMI 12 GPUs",
-            "training_time_hours": 0.178,  # ~11.2x speedup
-            "runtime_seconds": 640,
-            "is_laptop": False,
-            "is_extrapolated": False,
-            "nodes": 2,
-            "gpus": 12,
-            "device_type": "GPU",
-            "accuracy": 42.56,
-            "state": "finished",
-            "created": "",
-        },
-        {
-            "run_name": "2 Node 16 GPU Run",
-            "clean_name": "LUMI 16 GPUs",
-            "training_time_hours": 0.133,  # ~15x speedup
-            "runtime_seconds": 480,
-            "is_laptop": False,
-            "is_extrapolated": False,
-            "nodes": 2,
-            "gpus": 16,
-            "device_type": "GPU",
-            "accuracy": 42.56,
-            "state": "finished",
-            "created": "",
-        },
-        # 3 node configurations
-        {
-            "run_name": "3 Node 20 GPU Run",
-            "clean_name": "LUMI 20 GPUs",
-            "training_time_hours": 0.105,  # ~19x speedup
-            "runtime_seconds": 378,
-            "is_laptop": False,
-            "is_extrapolated": False,
-            "nodes": 3,
-            "gpus": 20,
-            "device_type": "GPU",
-            "accuracy": 39.36,
-            "state": "finished",
-            "created": "",
-        },
-        {
-            "run_name": "3 Node 24 GPU Run",
-            "clean_name": "LUMI 24 GPUs",
-            "training_time_hours": 0.089,  # ~22.5x speedup
-            "runtime_seconds": 320,
-            "is_laptop": False,
-            "is_extrapolated": False,
-            "nodes": 3,
-            "gpus": 24,
-            "device_type": "GPU",
-            "accuracy": 39.36,
-            "state": "finished",
-            "created": "",
-        },
-        # 4 node configurations
-        {
-            "run_name": "4 Node 28 GPU Run",
-            "clean_name": "LUMI 28 GPUs",
-            "training_time_hours": 0.075,  # ~26.7x speedup
-            "runtime_seconds": 270,
-            "is_laptop": False,
-            "is_extrapolated": False,
-            "nodes": 4,
-            "gpus": 28,
-            "device_type": "GPU",
-            "accuracy": 39.36,
-            "state": "finished",
-            "created": "",
-        },
-        {
-            "run_name": "4 Node 32 GPU Run",
-            "clean_name": "LUMI 32 GPUs",
-            "training_time_hours": 0.063,  # ~31.7x speedup
-            "runtime_seconds": 227,
-            "is_laptop": False,
-            "is_extrapolated": False,
-            "nodes": 4,
-            "gpus": 32,
-            "device_type": "GPU",
-            "accuracy": 53.35,
-            "state": "finished",
-            "created": "",
-        },
-        # Laptop benchmarks
-        {
-            "run_name": "Laptop Multicore",
-            "clean_name": "Laptop (Multicore)",
-            "training_time_hours": 54.094,
-            "runtime_seconds": 194740,
-            "is_laptop": True,
-            "is_extrapolated": True,
-            "nodes": 1,
-            "gpus": 0,
-            "device_type": "CPU",
-            "accuracy": 47.92,
-            "state": "finished",
-            "created": "",
-        },
-        {
-            "run_name": "Laptop Single",
-            "clean_name": "Laptop (Single)",
-            "training_time_hours": 75.831,
-            "runtime_seconds": 273000,
-            "is_laptop": True,
-            "is_extrapolated": True,
-            "nodes": 1,
-            "gpus": 0,
-            "device_type": "CPU",
-            "accuracy": 42.56,
-            "state": "finished",
-            "created": "",
-        },
-    ]
-    return pd.DataFrame(manual_data)
+        # Look for patterns like "X GPU" or "X-GPU"
+        gpu_pattern = r"(\d+)\s*GPU"
+        match = re.search(gpu_pattern, name, re.IGNORECASE)
+        if match:
+            try:
+                return int(match.group(1))
+            except:
+                pass
+
+        # Fallback: assume 1 GPU if no pattern found
+        return 1
+
+
+if __name__ == "__main__":
+    # Initialize extractor with CSV directory
+    extractor = WandbDataExtractor("CSVs")
+
+    # Update benchmark_data.csv with new CSV files
+    df = extractor.update_benchmark_from_csvs()
+
+    if df is not None:
+        print("\nDataFrame summary:")
+        print(f"Total runs: {len(df)}")
+        print(f"Device types: {df['device_type'].value_counts().to_dict()}")
+        print(f"Node counts: {df['nodes'].value_counts().to_dict()}")
+        if "total_gpus" in df.columns:
+            print(f"GPU counts: {df['total_gpus'].value_counts().to_dict()}")
+        print("\nFirst few rows:")
+        display_cols = [
+            "run_name",
+            "nodes",
+            "device_type",
+            "training_time_hours",
+            "accuracy",
+        ]
+        if "total_gpus" in df.columns:
+            display_cols.insert(2, "total_gpus")
+        print(df[display_cols].head())

@@ -15,7 +15,6 @@ import matplotlib.animation as animation
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from extract_data import create_manual_data
 from visualization_colors import COLORS
 
 # Set up output directory
@@ -31,7 +30,7 @@ plt.rcParams["axes.labelsize"] = 14
 
 
 def load_data():
-    return create_manual_data()
+    return
 
 
 def create_training_comparison_mp4():
