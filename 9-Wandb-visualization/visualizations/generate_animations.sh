@@ -23,9 +23,6 @@ python scaling_efficiency.py
 echo "📊 Running training comparison animation..."
 python training_comparison.py
 
-echo "📈 Running accuracy vs time animation..."
-python accuracy_vs_time.py
-
 echo "🏁 Running progress race animation..."
 python progress_race.py
 

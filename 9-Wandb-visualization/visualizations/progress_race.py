@@ -30,7 +30,43 @@ plt.rcParams["axes.labelsize"] = 14
 
 
 def load_data():
-    return
+    """Load benchmark data from CSV file"""
+    csv_path = Path(__file__).parent.parent / "charts" / "benchmark_data.csv"
+
+    if not csv_path.exists():
+        print(f"❌ Error: {csv_path} not found!")
+        print("Run extract_data.py first to generate benchmark data.")
+        return None
+
+    try:
+        df = pd.read_csv(csv_path)
+        print(f"📊 Loaded {len(df)} rows from {csv_path}")
+
+        # Create clean_name field based on GPU count for LUMI runs, keep original for laptops
+        def create_clean_name(row):
+            if row["is_laptop"]:
+                # Keep laptop names as they are
+                return row["run_name"]
+            else:
+                # LUMI runs: use GPU count instead of node count
+                gpu_count = row["total_gpus"]
+                if pd.notna(gpu_count) and gpu_count > 0:
+                    return f"LUMI {int(gpu_count)} GPU"
+                else:
+                    # Fallback to original name if no GPU count
+                    return row["run_name"]
+
+        df["clean_name"] = df.apply(create_clean_name, axis=1)
+
+        # Debug: print the clean names being generated
+        print("Clean names generated:")
+        for name in sorted(df["clean_name"].unique()):
+            print(f"  '{name}'")
+
+        return df
+    except Exception as e:
+        print(f"❌ Error loading CSV: {e}")
+        return None
 
 
 def create_progress_race_mp4():

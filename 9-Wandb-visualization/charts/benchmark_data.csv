@@ -1,6 +1,11 @@
-run_name,runtime_seconds,extrapolated_total_time_hr,nodes,device_type,accuracy,state,created,training_time_hours,is_laptop,is_extrapolated,clean_name
-Single Node Run,960.0,,1,,42.56,finished,2025-07-09T11:13:07.000Z,0.26666666666666666,False,False,LUMI 1-Node
-Four Node Run,303.0,,4,,39.36,finished,2025-07-10T13:32:40.000Z,0.08416666666666667,False,False,LUMI 4-Node
-Eight Node Run 2.0,196.0,,8,,53.35463258785943,finished,2025-07-10T14:48:20.000Z,0.05444444444444444,False,False,LUMI 8-Node
-Laptop-Multicore-2.0pct-8cores,4753.0,54.0944515367349,8,CPU,,finished,2025-07-14T13:23:58.000Z,54.0944515367349,True,True,Laptop (Multicore)
-Laptop-Benchmark-1.0pct-subset,2908.0,75.83101797103882,1,CPU,,finished,2025-07-14T12:34:44.000Z,75.83101797103882,True,True,Laptop (Single)
+run_name,runtime_seconds,extrapolated_total_time_hr,nodes,total_gpus,device_type,accuracy,state,created,training_time_hours,is_laptop,is_extrapolated
+1 GPU 1 Node Run,7224.0,,1.0,1,GPU,57.625,finished,2025-08-07T12:58:30.000Z,2.006666666666667,False,False
+2 GPU 1 Node Run,3700.0,,1.0,2,GPU,90.68,finished,2025-08-08T07:26:18.000Z,1.0277777777777777,False,False
+Single Node Run,960.0,,,8,GPU,42.56,finished,2025-07-09T11:13:07.000Z,0.2666666666666666,False,False
+Two Node Run,511.0,,,16,GPU,47.92,finished,2025-07-10T11:49:00.000Z,0.1419444444444444,False,False
+24 GPU 3 Node Run,399.0,,3.0,24,GPU,67.04136690647482,finished,2025-08-05T10:17:47.000Z,0.1108333333333333,False,False
+32 GPU 4 Node Run,298.0,,4.0,32,GPU,62.57,finished,2025-08-05T10:17:47.000Z,0.0827777777777777,False,False
+Eight Node Run 2.0,196.0,,8.0,64,GPU,53.35463258785943,finished,2025-07-10T14:48:20.000Z,0.0544444444444444,False,False
+Laptop-Multicore-2.0pct-8cores,4753.0,54.0944515367349,,0,CPU,,finished,2025-07-14T13:23:58.000Z,54.0944515367349,True,True
+Laptop-Benchmark-1.0pct-subset,2908.0,75.83101797103882,,0,CPU,,finished,2025-07-14T12:34:44.000Z,75.83101797103882,True,True
+4 GPU 1 Node Run,1905.0,,1.0,4,GPU,98.0,finished,2025-08-08T15:34:24.000Z,0.5291666666666667,False,False

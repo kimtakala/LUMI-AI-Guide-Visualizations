@@ -37,6 +37,7 @@ class WandbDataExtractor:
         name = str(row.get("Name", "Unknown"))
         if name == "Unknown" or pd.isna(name):
             return None
+
         runtime_seconds = None
         runtime_str = str(row.get("Runtime", ""))
         if runtime_str and runtime_str != "nan":
@@ -44,6 +45,8 @@ class WandbDataExtractor:
                 runtime_seconds = float(runtime_str)
             except:
                 pass
+
+        # Get nodes from CSV data
         nodes = None
         nodes_val = row.get("nodes", "")
         if pd.notna(nodes_val) and str(nodes_val) != "" and str(nodes_val) != "nan":
@@ -51,10 +54,28 @@ class WandbDataExtractor:
                 nodes = int(float(nodes_val))
             except:
                 pass
-        if nodes is None:
-            nodes = self._extract_nodes_from_name(name)
 
-        # Extract GPU count from CSV or run name
+        # Hard-coded GPU mappings for specific run names (cleaner approach)
+        gpu_mappings = {
+            "1 GPU 1 Node Run": 1,
+            "2 GPU 1 Node Run": 2,
+            "4 GPU 1 Node Run": 4,
+            "8 GPU 1 Node Run": 8,
+            "16 GPU 2 Node Run": 16,
+            "24 GPU 3 Node Run": 24,
+            "32 GPU 4 Node Run": 32,
+            "Four Node Run": 32,
+            "Eight Node Run": 64,
+            "Eight Node Run 2.0": 64,
+            "Eight Node Run 2.1": 64,
+            "Single Node Run": 8,
+            "Two Node Run": 16,
+            "Sixteen Node Run": 128,
+            "Laptop-Multicore-2.0pct-8cores": 0,
+            "Laptop-Benchmark-1.0pct-subset": 0,
+        }
+
+        # Get total_gpus from CSV data first, fallback to mappings
         total_gpus = None
         gpu_val = row.get("total_gpus", "")
         if pd.notna(gpu_val) and str(gpu_val) != "" and str(gpu_val) != "nan":
@@ -63,31 +84,18 @@ class WandbDataExtractor:
             except:
                 pass
 
-        # If no total_gpus column, try to extract from gpus column or name
-        if total_gpus is None:
-            gpus_val = row.get("gpus", "")
-            if pd.notna(gpus_val) and str(gpus_val) != "" and str(gpus_val) != "nan":
-                try:
-                    total_gpus = int(float(gpus_val))
-                except:
-                    pass
+        if total_gpus is None and name in gpu_mappings:
+            total_gpus = gpu_mappings[name]
 
-        if total_gpus is None:
-            total_gpus = self._extract_gpus_from_name(name)
-
-        # Enhanced device type detection for new CSV format
+        # Get device type from CSV data
         device_type = str(row.get("device_type", "")).upper()
         if pd.isna(device_type) or device_type == "NAN" or device_type == "":
-            if "Laptop" in name:
+            hardware = str(row.get("hardware", ""))
+            device = str(row.get("device", ""))
+            if "cpu" in hardware.lower() or "cpu" in device.lower() or "Laptop" in name:
                 device_type = "CPU"
             else:
-                # Try to infer from other columns in new CSV format
-                hardware = str(row.get("hardware", ""))
-                device = str(row.get("device", ""))
-                if "cpu" in hardware.lower() or "cpu" in device.lower():
-                    device_type = "CPU"
-                else:
-                    device_type = "GPU"
+                device_type = "GPU"
 
         extrapolated_time = None
         extrap_val = row.get("extrapolated_total_time_hr", "")
@@ -97,17 +105,17 @@ class WandbDataExtractor:
             except:
                 pass
 
-        # Enhanced accuracy detection for new CSV format
+        # Get accuracy from CSV data
         accuracy = None
-        # Try multiple accuracy column names
         for acc_col in ["acc", "val_accuracy", "train_accuracy"]:
             acc_val = row.get(acc_col, "")
             if pd.notna(acc_val) and str(acc_val) != "" and str(acc_val) != "nan":
                 try:
                     accuracy = float(acc_val)
-                    break  # Use the first valid accuracy found
+                    break
                 except:
                     continue
+
         run_data = {
             "run_name": name,
             "runtime_seconds": runtime_seconds,
@@ -126,15 +134,22 @@ class WandbDataExtractor:
         if df.empty:
             print("No data extracted from CSV files")
             return df
+
         df["training_time_hours"] = df.apply(self._calculate_training_hours, axis=1)
         df["is_laptop"] = df["device_type"].str.contains("CPU", case=False, na=False)
         df["is_extrapolated"] = df["extrapolated_total_time_hr"].notna()
-        df["clean_name"] = df["run_name"].apply(self._clean_run_name)
+
+        # Filter to valid runs with training time data
         df = df[df["training_time_hours"].notna()]
+
+        # Separate LUMI and laptop runs
         lumi_runs = df[~df["is_laptop"]].copy()
         laptop_runs = df[df["is_laptop"]].copy()
+
+        # Select best runs for each category
         selected_lumi = self._select_best_lumi_runs(lumi_runs)
         selected_laptop = self._deduplicate_runs(laptop_runs)
+
         final_df = pd.concat([selected_lumi, selected_laptop], ignore_index=True)
         return final_df
 
@@ -162,7 +177,6 @@ class WandbDataExtractor:
             "training_time_hours",
             "is_laptop",
             "is_extrapolated",
-            "clean_name",
         ]
 
         # Add any missing columns with default values
@@ -253,9 +267,11 @@ class WandbDataExtractor:
     def _deduplicate_runs(self, runs_df):
         if runs_df.empty:
             return runs_df
+
+        # For duplicate run names, keep the one with shortest training time
         df_dedup = []
-        for clean_name in runs_df["clean_name"].unique():
-            subset = runs_df[runs_df["clean_name"] == clean_name]
+        for run_name in runs_df["run_name"].unique():
+            subset = runs_df[runs_df["run_name"] == run_name]
             if len(subset) > 1:
                 best_run = subset.loc[subset["training_time_hours"].idxmin()]
                 df_dedup.append(best_run)
@@ -270,55 +286,6 @@ class WandbDataExtractor:
             return row["runtime_seconds"] / 3600
         else:
             return None
-
-    def _clean_run_name(self, name):
-        if "Laptop" in name:
-            if "Multicore" in name or "2.0pct" in name:
-                return "Laptop (Multicore)"
-            else:
-                return "Laptop (Single)"
-        elif "Sixteen" in name or "16" in name:
-            return "LUMI 16-Node"
-        elif "Eight" in name or "8" in name:
-            return "LUMI 8-Node"
-        elif "Four" in name or "4" in name:
-            return "LUMI 4-Node"
-        elif "Two" in name or "2" in name:
-            return "LUMI 2-Node"
-        elif "Single" in name or "1" in name:
-            return "LUMI 1-Node"
-        else:
-            return name
-
-    def _extract_nodes_from_name(self, name):
-        if "Sixteen" in name or "16" in name:
-            return 16
-        elif "Eight" in name or "8" in name:
-            return 8
-        elif "Four" in name or "4" in name:
-            return 4
-        elif "Two" in name or "2" in name:
-            return 2
-        elif "Single" in name or "1" in name:
-            return 1
-        else:
-            return None
-
-    def _extract_gpus_from_name(self, name):
-        """Extract GPU count from run name like '8 GPU 1 Node Run'"""
-        import re
-
-        # Look for patterns like "X GPU" or "X-GPU"
-        gpu_pattern = r"(\d+)\s*GPU"
-        match = re.search(gpu_pattern, name, re.IGNORECASE)
-        if match:
-            try:
-                return int(match.group(1))
-            except:
-                pass
-
-        # Fallback: assume 1 GPU if no pattern found
-        return 1
 
 
 if __name__ == "__main__":

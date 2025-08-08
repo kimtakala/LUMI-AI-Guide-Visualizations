@@ -30,7 +30,21 @@ plt.rcParams["axes.labelsize"] = 14
 
 
 def load_data():
-    return
+    """Load benchmark data from CSV file"""
+    csv_path = Path(__file__).parent.parent / "charts" / "benchmark_data.csv"
+
+    if not csv_path.exists():
+        print(f"❌ Error: {csv_path} not found!")
+        print("Run extract_data.py first to generate benchmark data.")
+        return None
+
+    try:
+        df = pd.read_csv(csv_path)
+        print(f"📊 Loaded {len(df)} rows from {csv_path}")
+        return df
+    except Exception as e:
+        print(f"❌ Error loading CSV: {e}")
+        return None
 
 
 def create_scaling_efficiency_mp4():
@@ -38,17 +52,70 @@ def create_scaling_efficiency_mp4():
     print("🎬 Creating scaling efficiency MP4...")
 
     df = load_data()
+    if df is None:
+        return
 
-    # Prepare data - filter to only up to 32 GPUs
+    # Debug: Print dataframe info
+    print(f"📊 Total rows: {len(df)}")
+    print(f"📊 Columns: {df.columns.tolist()}")
+    print(f"📊 Sample data:")
+    print(df[["run_name", "is_laptop", "total_gpus", "training_time_hours"]].head())
+
+    # Prepare data - filter to only LUMI runs (not laptops)
     lumi_df = df[~df["is_laptop"]].copy()
-    lumi_df = lumi_df[lumi_df["gpus"] <= 32].sort_values("gpus")
-    gpu_counts = sorted(lumi_df["gpus"].unique())
+    print(f"📊 LUMI runs (non-laptop): {len(lumi_df)}")
+
+    # Remove any rows without total_gpus or training_time_hours data
+    lumi_df = lumi_df[lumi_df["total_gpus"].notna()]
+    lumi_df = lumi_df[lumi_df["training_time_hours"].notna()]
+    lumi_df = lumi_df[lumi_df["training_time_hours"] > 0]  # Must have positive time
+    print(f"📊 LUMI runs with valid data: {len(lumi_df)}")
+
+    if len(lumi_df) == 0:
+        print("❌ No LUMI GPU data with valid training times found!")
+        return
+
+    # Filter to reasonable GPU counts and sort
+    lumi_df = lumi_df[lumi_df["total_gpus"] <= 32].sort_values("total_gpus")
+    print(f"📊 LUMI runs ≤32 GPUs: {len(lumi_df)}")
+
+    # For duplicate GPU counts, keep only the fastest run
+    lumi_df = lumi_df.loc[lumi_df.groupby("total_gpus")["training_time_hours"].idxmin()]
+    print(f"📊 LUMI runs after deduplication: {len(lumi_df)}")
+
+    # Debug: Show the filtered data
+    print("📊 Filtered LUMI data:")
+    for _, row in lumi_df.iterrows():
+        print(
+            f"  {row['run_name']}: {row['total_gpus']} GPUs, {row['training_time_hours']:.3f} hours"
+        )
+
+    gpu_counts = sorted(lumi_df["total_gpus"].unique())
     speedups = []
-    base_time = lumi_df[lumi_df["gpus"] == min(gpu_counts)]["training_time_hours"].min()
+
+    # Get baseline time (use the SLOWEST run with fewest GPUs for proper speedup calculation)
+    min_gpu_count = min(gpu_counts)
+    base_time = lumi_df[lumi_df["total_gpus"] == min_gpu_count][
+        "training_time_hours"
+    ].max()  # Use max time as baseline
+
+    print(f"📊 Base time ({min_gpu_count} GPUs): {base_time:.3f} hours")
+
     for n in gpu_counts:
-        t = lumi_df[lumi_df["gpus"] == n]["training_time_hours"].min()
-        speedup = base_time / t if t else 0
+        # Get the best (fastest) time for this GPU count
+        gpu_subset = lumi_df[lumi_df["total_gpus"] == n]
+        t = gpu_subset["training_time_hours"].min()
+        speedup = base_time / t if t and t > 0 else 0
         speedups.append(speedup)
+        print(f"📊 {n} GPUs: {t:.3f} hours → speedup: {speedup:.2f}x")
+
+    print(f"📊 Final GPU scaling data: {dict(zip(gpu_counts, speedups))}")
+
+    # Validate we have meaningful data
+    if max(speedups) <= 1.1:  # If no speedup is greater than 1.1x
+        print("⚠️  Warning: No significant speedup detected. Check your data.")
+        print("   This might be normal if you only have one GPU configuration.")
+        return
 
     # Animation parameters
     duration_sec = 10
@@ -87,7 +154,6 @@ def create_scaling_efficiency_mp4():
     ax.legend(loc="upper left")
 
     # Add text annotations
-    # Move the main annotation to the right outside the graph
     ax.annotate(
         "GPU Scaling Insights\n• Ideal speedup: linear with GPUs\n• Actual speedup: near-linear\n• LUMI shows excellent GPU scaling\n• Tested up to 32 GPUs (4 nodes)",
         xy=(1.0, 0.98),

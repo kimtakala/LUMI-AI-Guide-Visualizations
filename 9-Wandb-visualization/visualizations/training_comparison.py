@@ -30,7 +30,45 @@ plt.rcParams["axes.labelsize"] = 14
 
 
 def load_data():
-    return
+    """Load benchmark data from CSV file"""
+    csv_path = Path(__file__).parent.parent / "charts" / "benchmark_data.csv"
+
+    if not csv_path.exists():
+        print(f"❌ Error: {csv_path} not found!")
+        print("Run extract_data.py first to generate benchmark data.")
+        return None
+
+    try:
+        df = pd.read_csv(csv_path)
+        print(f"📊 Loaded {len(df)} rows from {csv_path}")
+        return df
+    except Exception as e:
+        print(f"❌ Error loading CSV: {e}")
+        return None
+
+
+def format_time_human_readable(hours):
+    """Format time in human-readable format"""
+    if hours >= 10:
+        # 10+ hours: just show hours
+        return f"{hours:.0f}h"
+    elif hours >= 1:
+        # 1-10 hours: show hours and minutes
+        h = int(hours)
+        m = int((hours - h) * 60)
+        if m == 0:
+            return f"{h}h"
+        else:
+            return f"{h}h {m}m"
+    else:
+        # Less than 1 hour: show minutes
+        minutes = hours * 60
+        if minutes >= 1:
+            return f"{minutes:.0f}m"
+        else:
+            # Less than 1 minute: show seconds
+            seconds = minutes * 60
+            return f"{seconds:.0f}s"
 
 
 def create_training_comparison_mp4():
@@ -38,11 +76,36 @@ def create_training_comparison_mp4():
     print("🎬 Creating training comparison MP4...")
 
     df = load_data()
+    if df is None:
+        return
 
-    # Filter to only include up to 4 nodes (32 GPUs) and laptop
-    df_filtered = df[
-        (df["is_laptop"]) | ((~df["is_laptop"]) & (df["nodes"] <= 4))
-    ].copy()
+    # Create clean_name field based on GPU count for LUMI runs, simplify laptop names
+    def create_clean_name(row):
+        if row["is_laptop"]:
+            # Simplify laptop names to match color keys
+            if "Multicore" in row["run_name"]:
+                return "Laptop (Multicore)"
+            elif "Benchmark" in row["run_name"]:
+                return "Laptop (Single)"
+            else:
+                return "Laptop"
+        else:
+            # LUMI runs: use GPU count instead of node count
+            gpu_count = row["total_gpus"]
+            if pd.notna(gpu_count) and gpu_count > 0:
+                return f"LUMI {int(gpu_count)} GPU"
+            else:
+                # Fallback to original name if no GPU count
+                return row["run_name"]
+
+    df["clean_name"] = df.apply(create_clean_name, axis=1)
+
+    # Include all runs (no filtering by node count)
+    df_filtered = df[df["training_time_hours"].notna()].copy()
+
+    if len(df_filtered) == 0:
+        print("❌ No data found for comparison!")
+        return
 
     # Prepare data
     df_sorted = df_filtered.sort_values("training_time_hours")
@@ -50,19 +113,27 @@ def create_training_comparison_mp4():
     times = df_sorted["training_time_hours"].tolist()
     colors = [COLORS.get(name, "#333") for name in names]
 
-    # Create figure
-    fig, ax = plt.subplots(figsize=(14, 8))
+    print(f"📊 Comparing {len(names)} configurations")
+
+    # Create figure with appropriate size
+    fig, ax = plt.subplots(figsize=(12, 8))
     ax.set_yscale("log")  # Use logarithmic scale for y-axis
     ax.set_ylim(min(times) * 0.5, max(times) * 2)
-    ax.set_xlabel("Configuration")
-    ax.set_ylabel("Training Time (Hours) - Log Scale")
-    ax.set_title("LUMI vs Laptop: Training Time Comparison (Up to 4 Nodes)")
+    ax.set_xlabel("Hardware Configuration")
+    ax.set_ylabel("Training Time - Log Scale")
+    ax.set_title("LUMI vs Laptop: Training Time Comparison")
 
     # Create bars
     bars = ax.bar(names, [min(times) * 0.1] * len(names), color=colors, alpha=0.8)
 
-    # Rotate x-axis labels for better readability
+    # Rotate x-axis labels for better readability and ensure they fit
     plt.xticks(rotation=45, ha="right")
+
+    # Adjust layout to prevent text cutoff
+    plt.tight_layout()
+
+    # Add extra space at bottom for rotated labels
+    plt.subplots_adjust(bottom=0.2)
 
     # Add value labels
     value_texts = []
@@ -77,91 +148,34 @@ def create_training_comparison_mp4():
         )
         value_texts.append(text)
 
-    # Add legend box to top right outside of graph
+    # Add legend box positioned in top right corner of the plot area
     ax.text(
-        1.05,
-        0.95,
-        "Performance Insights\n• LUMI GPUs are orders of magnitude faster\n• Laptop training takes days vs hours\n• Log scale shows dramatic differences\n• Tested up to 32 GPUs (4 nodes)",
+        0.02,
+        0.98,
+        "Performance Insights\n• LUMI GPUs are orders of magnitude faster\n• Laptop training takes days vs hours\n• Log scale shows dramatic differences\n• GPU scaling shows clear benefits",
         transform=ax.transAxes,
         verticalalignment="top",
+        horizontalalignment="left",
         bbox=dict(boxstyle="round", facecolor="white", alpha=0.9),
     )
 
-    plt.subplots_adjust(right=0.75)  # Make room for legend box
-
-    # Calculate animation timing based on completion count
-    # No hard frame limit - animation ends when last bar completes
-    # Individual speed multipliers for each completion + overall speed scaling
+    # Animation configuration for constant speed and 10 second duration
     min_time = min(times)
     max_time = max(times)
 
-    # Configuration: Targeted speed control
-    # The key insight: slow progression for first 3 bars, then speed up for final 2
-    base_time_per_frame = 0.002  # Very slow base progression (hours per frame)
-    speedup_after_third = (
-        200.0  # MAIN CONTROL: Speed multiplier after 3rd bar completes
-    )
-    overall_speed_factor = 1.0  # Global speed adjustment (keep at 1.0 unless needed)
-
-    # Calculate total frames needed for this configuration
-    def calculate_total_frames():
-        """Calculate how many frames needed to complete with current settings"""
-        effective_base_rate = base_time_per_frame * overall_speed_factor
-
-        sorted_times = sorted(times)
-        current_time = 0
-        frames_used = 0
-
-        while current_time < max_time:
-            # Count completed bars at current time
-            completed_count = sum(1 for t in sorted_times if t <= current_time)
-
-            # Simple rule: slow until 3rd completion, then fast
-            if completed_count >= 3:
-                current_rate = effective_base_rate * speedup_after_third
-            else:
-                current_rate = effective_base_rate
-
-            # Advance one frame
-            current_time += current_rate
-            frames_used += 1
-
-            # Safety check
-            if frames_used > 5000:  # Max 5000 frames
-                break
-
-        return frames_used
-
-    total_frames = calculate_total_frames()
+    # Target 10 seconds at 30 fps = 300 frames
+    total_frames = 300
     print(f"Animation will be {total_frames} frames ({total_frames/30:.1f} seconds)")
 
-    # Create time mapping for variable speed animation
-    def get_current_time_limit(frame):
-        """Calculate time limit for given frame"""
-        effective_base_rate = base_time_per_frame * overall_speed_factor
-
-        sorted_times = sorted(times)
-        current_time = 0
-        current_frame = 0
-
-        while current_frame < frame and current_time < max_time:
-            # Count completed bars at current time
-            completed_count = sum(1 for t in sorted_times if t <= current_time)
-
-            # Simple rule: slow until 3rd completion, then fast
-            if completed_count >= 3:
-                current_rate = effective_base_rate * speedup_after_third
-            else:
-                current_rate = effective_base_rate
-
-            # Advance one frame
-            current_time += current_rate
-            current_frame += 1
-
-        return min(current_time, max_time)
-
     def animate(frame):
-        current_max_time = get_current_time_limit(frame)
+        # Log scale progression: each frame represents a constant portion of log space
+        progress = frame / (total_frames - 1)  # 0 to 1
+
+        # Calculate current threshold using logarithmic interpolation
+        log_min = np.log10(min_time)
+        log_max = np.log10(max_time)
+        current_log_threshold = log_min + progress * (log_max - log_min)
+        current_max_time = 10**current_log_threshold
 
         for i, (bar, time_val, text) in enumerate(zip(bars, times, value_texts)):
             # Each bar grows until it reaches its final height or the current time limit
@@ -170,10 +184,7 @@ def create_training_comparison_mp4():
 
             # Update text
             if current_height > min(times) * 0.2:
-                if current_height < 1:
-                    text.set_text(f"{current_height:.3f}h")
-                else:
-                    text.set_text(f"{current_height:.2f}h")
+                text.set_text(format_time_human_readable(current_height))
                 text.set_position(
                     (
                         bar.get_x() + bar.get_width() / 2,
@@ -185,7 +196,7 @@ def create_training_comparison_mp4():
 
         return list(bars) + value_texts
 
-    # Create animation with dynamic frame count
+    # Create animation with constant speed
     anim = animation.FuncAnimation(
         fig, animate, frames=total_frames, interval=33, blit=True, repeat=True
     )
