@@ -1,37 +1,44 @@
 import torch
+import torch.distributed as dist
+import os
 import time
 import torchvision.transforms as transforms
 from torchvision.models import vit_b_16
 from torch.utils.data import DataLoader, random_split
-from torch.nn.parallel import DataParallel
+from torch.nn.parallel import DistributedDataParallel
+from torch.utils.data.distributed import DistributedSampler
 from hdf5_dataset import HDF5Dataset
 
 import wandb
 
+# Distributed setup
+dist.init_process_group(backend="nccl")
+local_rank = int(os.environ["LOCAL_RANK"])
+torch.cuda.set_device(local_rank)
+rank = int(os.environ["RANK"])
 
-# Multi-GPU single-node setup using DataParallel
-device = torch.device("cuda")
-print(f"4 GPU DataParallel training on device: {device}")
+print(f"Rank {rank} (local {local_rank}) on GPU {local_rank}")
 
-print("Wandb init")
-wandb.init(
-    # set the wandb project where this run will be logged
-    project="Wandb-visualization",
-    name="4 GPU 1 Node Run",
-    # track hyperparameters and run metadata
-    config={
-        "base_learning_rate": 0.001,
-        "learning_rate": 0.001,
-        "batch_size_per_gpu": 32,
-        "effective_batch_size": 128,  # 32 * 4 GPUs
-        "architecture": "vit_b_16",
-        "epochs": 10,
-        "nodes": 1,
-        "gpus": 4,
-        "total_gpus": 4,
-        "scaling_strategy": "dataparallel_single_node",
-    },
-)
+if rank == 0:
+    print("Wandb init")
+    wandb.init(
+        # set the wandb project where this run will be logged
+        project="Wandb-visualization",
+        name="4 GPU 1 Node Run",
+        # track hyperparameters and run metadata
+        config={
+            "base_learning_rate": 0.001,
+            "learning_rate": 0.001,
+            "batch_size_per_gpu": 32,
+            "effective_batch_size": 32 * 4,  # 32 * 4 GPUs
+            "architecture": "vit_b_16",
+            "epochs": 10,
+            "nodes": 1,
+            "gpus": 4,
+            "total_gpus": 4,
+            "scaling_strategy": "distributeddataparallel_single_node",
+        },
+    )
 
 
 # Define transformations
@@ -45,30 +52,38 @@ transform = transforms.Compose(
 )
 
 
-model = vit_b_16(weights="DEFAULT").to(device)
-model = DataParallel(model)  # Use DataParallel for single-node multi-GPU
+model = vit_b_16(weights="DEFAULT").to(local_rank)
+model = DistributedDataParallel(model, device_ids=[local_rank])
 
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 
 def train_model(
-    model, criterion, optimizer, train_loader, val_loader, train_dataset, epochs=10
+    model,
+    criterion,
+    optimizer,
+    train_loader,
+    val_loader,
+    train_dataset,
+    train_sampler,
+    epochs=10,
 ):
 
     # Calculate dynamic steps_per_epoch based on actual dataset and configuration
     dataset_size = len(train_dataset)
     batch_size_per_gpu = train_loader.batch_size
-    world_size = 4  # DataParallel with 4 GPUs
+    world_size = dist.get_world_size()
     effective_batch_size = batch_size_per_gpu * world_size
     steps_per_epoch = len(train_loader)
 
-    print(f"Dynamic scheduler calculation:")
-    print(f"  Dataset size: {dataset_size}")
-    print(f"  Batch size per GPU: {batch_size_per_gpu}")
-    print(f"  World size: {world_size}")
-    print(f"  Effective batch size: {effective_batch_size}")
-    print(f"  Steps per epoch: {steps_per_epoch}")
+    if rank == 0:
+        print(f"Dynamic scheduler calculation:")
+        print(f"  Dataset size: {dataset_size}")
+        print(f"  Batch size per GPU: {batch_size_per_gpu}")
+        print(f"  World size: {world_size}")
+        print(f"  Effective batch size: {effective_batch_size}")
+        print(f"  Steps per epoch: {steps_per_epoch}")
 
     # Create scheduler with dynamic steps_per_epoch
     warmup_epochs = 1
@@ -85,12 +100,11 @@ def train_model(
 
     # note that "cuda" is used as a general reference to GPUs,
     # even when running on AMD GPUs that use ROCm
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.to(device)
 
     training_start_time = time.time()
 
     for epoch in range(epochs):
+        train_sampler.set_epoch(epoch)
         epoch_start_time = time.time()
         model.train()
         running_loss = 0.0
@@ -98,7 +112,7 @@ def train_model(
         total_samples = 0
 
         for batch_idx, (images, labels) in enumerate(train_loader):
-            images, labels = images.to(device), labels.to(device)
+            images, labels = images.to(local_rank), labels.to(local_rank)
 
             optimizer.zero_grad()
             outputs = model(images)
@@ -115,7 +129,7 @@ def train_model(
             correct_predictions += (predicted == labels).sum().item()
 
             # Log every 10 batches for monitoring
-            if batch_idx % 10 == 0:
+            if batch_idx % 10 == 0 and rank == 0:
                 batch_acc = 100.0 * correct_predictions / total_samples
                 elapsed_time = time.time() - training_start_time
                 current_lr = scheduler.get_last_lr()[0]
@@ -136,9 +150,10 @@ def train_model(
         epoch_duration = time.time() - epoch_start_time
         progress_percentage = ((epoch + 1) / epochs) * 100
 
-        print(
-            f"Epoch {epoch+1}, Loss: {avg_loss:.4f}, Train Accuracy: {epoch_accuracy:.2f}%"
-        )
+        if rank == 0:
+            print(
+                f"Epoch {epoch+1}, Loss: {avg_loss:.4f}, Train Accuracy: {epoch_accuracy:.2f}%"
+            )
 
         # Validation step
         model.eval()
@@ -147,7 +162,7 @@ def train_model(
 
         with torch.no_grad():
             for images, labels in val_loader:
-                images, labels = images.to(device), labels.to(device)
+                images, labels = images.to(local_rank), labels.to(local_rank)
                 outputs = model(images)
 
                 _, predicted = torch.max(outputs, 1)
@@ -156,25 +171,26 @@ def train_model(
 
         val_accuracy = 100 * correct / total
 
-        print(f"Val Accuracy: {val_accuracy:.2f}%")
-        print(f"Epoch time: {epoch_duration:.2f}s")
+        if rank == 0:
+            print(f"Val Accuracy: {val_accuracy:.2f}%")
+            print(f"Epoch time: {epoch_duration:.2f}s")
 
-        wandb.log(
-            {
-                # Original trackers for comparison with old runs
-                "acc": val_accuracy,
-                "loss": avg_loss,
-                # New detailed trackers
-                "epoch": epoch,
-                "train_loss": avg_loss,
-                "train_accuracy": epoch_accuracy,
-                "val_accuracy": val_accuracy,
-                "learning_rate": scheduler.get_last_lr()[0],
-                "epoch_duration_minutes": epoch_duration / 60,
-                "progress_percentage": progress_percentage,
-                "total_elapsed_minutes": (time.time() - training_start_time) / 60,
-            }
-        )
+            wandb.log(
+                {
+                    # Original trackers for comparison with old runs
+                    "acc": val_accuracy,
+                    "loss": avg_loss,
+                    # New detailed trackers
+                    "epoch": epoch,
+                    "train_loss": avg_loss,
+                    "train_accuracy": epoch_accuracy,
+                    "val_accuracy": val_accuracy,
+                    "learning_rate": scheduler.get_last_lr()[0],
+                    "epoch_duration_minutes": epoch_duration / 60,
+                    "progress_percentage": progress_percentage,
+                    "total_elapsed_minutes": (time.time() - training_start_time) / 60,
+                }
+            )
 
 
 with HDF5Dataset(
@@ -188,10 +204,29 @@ with HDF5Dataset(
         full_train_dataset, [train_size, val_size]
     )
 
-    train_loader = DataLoader(train_dataset, batch_size=32, num_workers=7, shuffle=True)
+    train_sampler = DistributedSampler(train_dataset)
+    train_loader = DataLoader(
+        train_dataset, sampler=train_sampler, batch_size=32, num_workers=7
+    )
 
-    val_loader = DataLoader(val_dataset, batch_size=32, num_workers=7, shuffle=False)
+    val_sampler = DistributedSampler(val_dataset)
+    val_loader = DataLoader(
+        val_dataset, sampler=val_sampler, batch_size=32, num_workers=7, shuffle=False
+    )
 
-    train_model(model, criterion, optimizer, train_loader, val_loader, train_dataset)
+    train_model(
+        model,
+        criterion,
+        optimizer,
+        train_loader,
+        val_loader,
+        train_dataset,
+        train_sampler,
+    )
 
-torch.save(model.state_dict(), "lumi_vit_b16_quad_gpu_1node_4gpu_trained_model.pth")
+dist.destroy_process_group()
+
+if rank == 0:
+    torch.save(
+        model.module.state_dict(), "lumi_vit_b16_quad_gpu_1node_4gpu_trained_model.pth"
+    )

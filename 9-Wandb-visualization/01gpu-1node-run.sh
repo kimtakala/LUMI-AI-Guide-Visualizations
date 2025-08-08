@@ -1,12 +1,12 @@
 #!/bin/bash
 #SBATCH --account=project_462000008
-#SBATCH --partition=dev-g
+#SBATCH --partition=small-g
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=7
 #SBATCH --mem-per-gpu=60G
-#SBATCH --time=30:00
+#SBATCH --time=3:00:00
 #SBATCH --output=slurm/01gpu-1node-run.sh-slurm-%j.out
 
 module load cray-pals
