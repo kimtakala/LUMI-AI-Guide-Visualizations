@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=project_462000008
-#SBATCH --partition=small-g
+#SBATCH --partition=dev-g
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=2
 #SBATCH --ntasks-per-node=2
@@ -14,10 +14,6 @@ module use /appl/local/containers/ai-modules
 module load singularity-AI-bindings
 
 CONTAINER=../lumi-pytorch-rocm-6.1.3-python-3.12-pytorch-v2.4.1.sif
-
-# NCCL configuration to work around small-g partition topology issues
-export NCCL_SOCKET_IFNAME=hsn0,hsn1
-export NCCL_NET_GDR_LEVEL=PHB
 
 # Set up distributed training environment variables
 export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
