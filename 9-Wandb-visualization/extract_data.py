@@ -55,7 +55,7 @@ class WandbDataExtractor:
             except:
                 pass
 
-        # Hard-coded GPU mappings for specific run names (cleaner approach)
+        # Hard-coded GPU mappings for specific run names
         gpu_mappings = {
             "1 GPU 1 Node Run": 1,
             "2 GPU 1 Node Run": 2,
