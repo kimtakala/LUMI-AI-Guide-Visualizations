@@ -5,12 +5,12 @@
 ---
 
 - Update the visualization scripts to include the new runs
+- Create comprehensive info sheets about used LUMI and laptop specs.
 
 ### TODO:
 
 ---
 
-- Create comprehensive info sheets about used LUMI and laptop specs.
 - Create a sheet about the specs of the visualizations
 - Create a user guide for generating the visualizations
 - Create a sheet about info relating to wandb
