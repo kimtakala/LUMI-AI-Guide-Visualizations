@@ -16,27 +16,47 @@ This suite visualizes the performance gap between LUMI distributed training and 
 
 - **LUMI 8-Node**: 3.3 min | **Laptop**: 54–76 hrs
 - **Max Speedup**: 1,393x (LUMI vs laptop)
-- **Best Accuracy**: 53.4% (LUMI, 3.3 min) vs 42–48% (laptop, 54–76 hrs)
+- **Best Accuracy**: 98.4% (LUMI 8-GPU, 16 min) vs 96% (laptop, 76 hrs [extrapolated])
 
 ## Usage
 
-1. Open PNG/PDF for static charts (image viewer)
+1. Open PNG for static charts (image viewer)
 2. Open MP4 for animated charts (video player)
-3. To regenerate:
+3. To extract data:
+
    ```bash
    cd 9-Wandb-visualization
    source visualization_env/bin/activate
-   python extract_and_visualize.py
+   python extract_data.py
    ```
+
+4. To visualize data:
+
+   _note:_
+   make sure you have ffmpeg installed for animation output.
+
+   ```
+   Install ffmpeg:
+   Ubuntu/Debian: sudo apt install ffmpeg
+   macOS: brew install ffmpeg
+   ```
+
+   ```bash
+   cd 9-Wandb-visualization
+   source visualization_env/bin/activate
+   ./visualizations/generate_animations.sh
+   # or alternatively:
+   python visualizations/progress_race.py  # etc.
+   ```
+
+   output will be generated to: `visualizations/charts`
 
 ## Notes
 
-- All HTML/PNG charts are self-contained and presentation-ready.
 - `.png` files in `charts/` are direct exports from Wandb.
-- All results are based on scientific, reproducible benchmarks.
 
 ---
 
-**Frameworks**: PyTorch, Wandb, Plotly, Matplotlib  
-**Environment**: LUMI supercomputer, Singularity  
+**Frameworks**: PyTorch, Wandb, Matplotlib, Pandas, H5PY
+**Environment**: LUMI supercomputer, Singularity
 **Dataset**: ImageNet subset

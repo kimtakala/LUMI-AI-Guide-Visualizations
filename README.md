@@ -1,18 +1,20 @@
-## This is a GitHub Repo for visualization scripts in the LUMI-AI-Guide project WANDB task
-
-### DONE:
+# This is a GitHub Repository for Visualization Scripts in the LUMI-AI-Guide Project WANDB Task
 
 ---
 
-- Update the visualization scripts to include the new runs
-- Create comprehensive info sheets about used LUMI and laptop specs.
+## Guides:
 
-### TODO:
+1. How to run the local scripts to benchmark performance:
+   found [here](9-Wandb-visualization/local/IMPLEMENTATION-SUMMARY.md).
+
+2. How to run the LUMI scripts:
+   found [here](9-Wandb-visualization/README.md).
+
+3. How to run the visualization scripts:
+   found [here](9-Wandb-visualization/visualizations/VISUALIZATION_SUMMARY.md).
 
 ---
 
-- Create a sheet about the specs of the visualizations
-- Create a user guide for generating the visualizations
-- Create a sheet about info relating to wandb
-- Create a guide on how to run the scripts. (and how they were changed)
-- Create links to all these from this readme
+### System Specifications Used for Testing:
+
+Found [here](9-Wandb-visualization/Specifications.md).
