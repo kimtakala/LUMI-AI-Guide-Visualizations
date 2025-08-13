@@ -62,11 +62,12 @@ export NCCL_NET_SHARED_BUFFERS=0
 CPU_BIND_MASKS="0x00fe000000000000,0xfe00000000000000,0x0000000000fe0000,0x00000000fe000000,0x00000000000000fe,0x000000000000fe00,0x000000fe00000000,0x0000fe0000000000"
 
 # wandb authentication
-export WANDB_API_KEY=00cb5e75213d7e0ec78d970c19fbd2808c9ab3db
+export WANDB_API_KEY=insert_api_key
 
 # add path to additional packages in squasfs file
 export SINGULARITYENV_PREPEND_PATH=/user-software/bin
 export PYTHONPATH=$PYTHONPATH:../resources
 
-# bind squashfs file into container and run python script inside container 
+# bind squashfs file into container and run python script inside container
+srun --cpu-bind=v,mask_cpu=$CPU_BIND_MASKS singularity exec -B ../resources/visualtransformer-env.sqsh:/user-software:image-src=/ $CONTAINER bash -c "export RANK=\$SLURM_PROCID && export LOCAL_RANK=\$SLURM_LOCALID && cd ../resources && python ../9-Wandb-visualization/scripts/wandb_ddp_visualtransformer_32nodes.py"
 srun --cpu-bind=v,mask_cpu=$CPU_BIND_MASKS singularity exec -B ../resources/visualtransformer-env.sqsh:/user-software:image-src=/ $CONTAINER bash -c "export RANK=\$SLURM_PROCID && export LOCAL_RANK=\$SLURM_LOCALID && cd ../resources && python ../9-Wandb-visualization/scripts/wandb_ddp_visualtransformer_32nodes.py"

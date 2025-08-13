@@ -37,7 +37,7 @@ export NCCL_IB_TIMEOUT=50
 export NCCL_TIMEOUT=1800000  # 30 minutes
 
 # wandb authentication
-export WANDB_API_KEY=00cb5e75213d7e0ec78d970c19fbd2808c9ab3db
+export WANDB_API_KEY=insert_api_key
 
 # add path to additional packages in squasfs file
 export SINGULARITYENV_PREPEND_PATH=/user-software/bin

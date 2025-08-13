@@ -15,7 +15,7 @@ module load singularity-AI-bindings
 
 CONTAINER=../lumi-pytorch-rocm-6.1.3-python-3.12-pytorch-v2.4.1.sif
 
-export WANDB_API_KEY=00cb5e75213d7e0ec78d970c19fbd2808c9ab3db
+export WANDB_API_KEY=insert_api_key
 export SINGULARITYENV_PREPEND_PATH=/user-software/bin
 export PYTHONPATH=$PYTHONPATH:../resources
 

@@ -21,7 +21,7 @@ export MASTER_PORT=29500
 export WORLD_SIZE=$SLURM_NPROCS
 export LOCAL_WORLD_SIZE=$SLURM_GPUS_PER_NODE
 
-export WANDB_API_KEY=00cb5e75213d7e0ec78d970c19fbd2808c9ab3db
+export WANDB_API_KEY=insert_api_key
 export SINGULARITYENV_PREPEND_PATH=/user-software/bin
 export PYTHONPATH=$PYTHONPATH:../resources
 
