@@ -4,13 +4,16 @@
 
 ## Guides:
 
-1. How to run the local scripts to benchmark performance:
+1. How to setup the virtual environment:
+   found [here](9-Wandb-visualization/Setting-up-venv.md).
+
+2. How to run the local scripts to benchmark performance:
    found [here](9-Wandb-visualization/local/IMPLEMENTATION-SUMMARY.md).
 
-2. How to run the LUMI scripts:
+3. How to run the LUMI scripts:
    found [here](9-Wandb-visualization/README.md).
 
-3. How to run the visualization scripts:
+4. How to run the visualization scripts:
    found [here](9-Wandb-visualization/visualizations/VISUALIZATION_SUMMARY.md).
 
 ---

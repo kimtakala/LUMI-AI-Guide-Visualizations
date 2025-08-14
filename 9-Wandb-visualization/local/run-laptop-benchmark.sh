@@ -6,11 +6,11 @@
 set -e
 
 # Configuration
-CONTAINER_PATH="/LUMI-AI-Guide-Visualizations/lumi-pytorch-rocm-6.1.3-python-3.12-pytorch-v2.4.1.sif"
-SCRIPT_DIR="/LUMI-AI-Guide-Visualizations/9-Wandb-visualization/local"
-WORKING_DIR="/LUMI-AI-Guide-Visualizations"
-export WANDB_API_KEY=insert_api_key
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WORKING_DIR="$(realpath "$SCRIPT_DIR/../..")"
+# export WANDB_API_KEY=insert_api_key
 
+export PYTHONPATH="$WORKING_DIR/resources:$PYTHONPATH"
 
 echo "=================================================="
 echo "FAIR LAPTOP BENCHMARK vs LUMI"
@@ -18,15 +18,8 @@ echo "=================================================="
 echo "Using the same dataset, model, and hyperparameters as LUMI"
 echo "Processing subset and extrapolating full training time"
 echo ""
-echo "Container: $(basename $CONTAINER_PATH)"
 echo "Working directory: $WORKING_DIR"
 echo ""
-
-# Check if container exists
-if [ ! -f "$CONTAINER_PATH" ]; then
-    echo "ERROR: Container not found at $CONTAINER_PATH"
-    exit 1
-fi
 
 # Check if HDF5 data exists
 HDF5_PATH="$WORKING_DIR/resources/train_images.hdf5"
@@ -73,14 +66,8 @@ echo ""
 echo "Executing in container..."
 cd "$WORKING_DIR"
 
-singularity exec \
---bind "$WORKING_DIR:$WORKING_DIR" \
---env WANDB_API_KEY="$WANDB_API_KEY" \
---env WANDB_MODE="${WANDB_MODE:-online}" \
---env OMP_NUM_THREADS=$(nproc) \
---env MKL_NUM_THREADS=$(nproc) \
-"$CONTAINER_PATH" \
-bash -c '$WITH_CONDA && cd '"$WORKING_DIR"' && python3 '"$SCRIPT_DIR"'/wandb_laptop_benchmark.py'
+python3 "$SCRIPT_DIR/wandb_laptop_benchmark.py"
+
 
 echo ""
 echo "=================================================="

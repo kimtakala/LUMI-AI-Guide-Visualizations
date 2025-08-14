@@ -22,7 +22,8 @@ This suite visualizes the performance gap between LUMI distributed training and 
 
 1. Open PNG for static charts (image viewer)
 2. Open MP4 for animated charts (video player)
-3. To extract data:
+3. After running your own runs and checking out the graphs from wandb, you can choose to export the data as csv. Copy that data to the [CSVs](../CSVs/) folder.
+4. To extract data:
 
    ```bash
    cd 9-Wandb-visualization
@@ -30,7 +31,7 @@ This suite visualizes the performance gap between LUMI distributed training and 
    python extract_data.py
    ```
 
-4. To visualize data:
+5. To visualize data:
 
    _note:_
    make sure you have ffmpeg installed for animation output.
